@@ -52,6 +52,7 @@ impl ConstValue {
             ConstValue::Null => Unexpected::Unit,
             ConstValue::Number(_) => Unexpected::Other("number"),
             ConstValue::String(v) => Unexpected::Str(v),
+            ConstValue::Raw(v) => Unexpected::Str(v),
             ConstValue::Boolean(v) => Unexpected::Bool(*v),
             ConstValue::Binary(v) => Unexpected::Bytes(v),
             ConstValue::Enum(v) => Unexpected::Str(v),
@@ -114,6 +115,7 @@ impl<'de> de::Deserializer<'de> for ConstValue {
                 .deserialize_any(visitor)
                 .map_err(|err| DeserializerError(err.to_string())),
             ConstValue::String(v) => visitor.visit_str(&v),
+            ConstValue::Raw(v) => visitor.visit_str(&v),
             ConstValue::Boolean(v) => visitor.visit_bool(v),
             ConstValue::Binary(bytes) => visitor.visit_bytes(&bytes),
             ConstValue::Enum(v) => visitor.visit_str(v.as_str()),

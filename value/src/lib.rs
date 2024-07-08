@@ -132,6 +132,8 @@ pub enum ConstValue {
     Number(Number),
     /// A string.
     String(String),
+    /// A string.
+    Raw(String),
     /// A boolean.
     Boolean(bool),
     /// A binary.
@@ -151,6 +153,7 @@ impl PartialEq for ConstValue {
             (ConstValue::Number(a), ConstValue::Number(b)) => a == b,
             (ConstValue::Boolean(a), ConstValue::Boolean(b)) => a == b,
             (ConstValue::String(a), ConstValue::String(b)) => a == b,
+            (ConstValue::Raw(a), ConstValue::Raw(b)) => a == b,
             (ConstValue::Enum(a), ConstValue::String(b)) => a == b,
             (ConstValue::String(a), ConstValue::Enum(b)) => a == b,
             (ConstValue::Enum(a), ConstValue::Enum(b)) => a == b,
@@ -291,6 +294,7 @@ impl ConstValue {
             Self::Null => Value::Null,
             Self::Number(num) => Value::Number(num),
             Self::String(s) => Value::String(s),
+            Self::Raw(s) => Value::Raw(s),
             Self::Boolean(b) => Value::Boolean(b),
             Self::Binary(bytes) => Value::Binary(bytes),
             Self::Enum(v) => Value::Enum(v),
@@ -337,6 +341,7 @@ impl Display for ConstValue {
         match self {
             Self::Number(num) => write!(f, "{}", *num),
             Self::String(val) => write_quoted(val, f),
+            Self::Raw(val) => f.write_str(&val),
             Self::Boolean(true) => f.write_str("true"),
             Self::Boolean(false) => f.write_str("false"),
             Self::Binary(bytes) => write_binary(bytes, f),
@@ -380,6 +385,8 @@ pub enum Value {
     Number(Number),
     /// A string.
     String(String),
+    /// A string.
+    Raw(String),
     /// A boolean.
     Boolean(bool),
     /// A binary.
@@ -411,6 +418,7 @@ impl Value {
             Self::Null => ConstValue::Null,
             Self::Number(num) => ConstValue::Number(num),
             Self::String(s) => ConstValue::String(s),
+            Self::Raw(s) => ConstValue::String(s),
             Self::Boolean(b) => ConstValue::Boolean(b),
             Self::Binary(v) => ConstValue::Binary(v),
             Self::Enum(v) => ConstValue::Enum(v),
@@ -469,6 +477,7 @@ impl Display for Value {
             Self::Variable(name) => write!(f, "${}", name),
             Self::Number(num) => write!(f, "{}", *num),
             Self::String(val) => write_quoted(val, f),
+            Self::Raw(val) => f.write_str(&val),
             Self::Boolean(true) => f.write_str("true"),
             Self::Boolean(false) => f.write_str("false"),
             Self::Binary(bytes) => write_binary(bytes, f),

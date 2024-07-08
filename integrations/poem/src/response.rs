@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use http::{HeaderName, HeaderValue};
-use poem::{web::Json, IntoResponse, Response};
+use poem::{web::Json, IntoResponse, Response, http::{header}};
 
 /// Response for `async_graphql::Request`.
 pub struct GraphQLResponse(pub async_graphql::Response);
@@ -29,7 +29,16 @@ impl From<async_graphql::BatchResponse> for GraphQLBatchResponse {
 
 impl IntoResponse for GraphQLBatchResponse {
     fn into_response(self) -> Response {
-        let mut resp = Json(&self.0).into_response();
+        println!("processing response");
+        let mut resp = if self.0.has_raw_data() {
+            println!("response has raw data");
+            let raw_data = self.0.get_raw_data().unwrap();
+            Response::builder()
+            .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+            .body(raw_data)
+        }else {
+            Json(&self.0).into_response()
+        }; 
 
         if self.0.is_ok() {
             if let Some(cache_control) = self.0.cache_control().value() {

@@ -39,6 +39,36 @@ impl Response {
         }
     }
 
+    pub fn has_raw_data(&self) -> bool {
+        match &self.data {
+            Value::Raw(_) => {true},
+            Value::Object(obj) => {
+                if let Some((_, v)) = obj.first() {
+                    if let Value::Raw(_) = v {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            _=>{false}
+        }
+    }
+
+    pub fn get_raw_data(&self) -> Option<String> {
+        match &self.data {
+            Value::Raw(ref raw_data) => {Some(raw_data.clone())},
+            Value::Object(ref obj) => {
+                if let Some((k, v)) = obj.first() {
+                    if let Value::Raw(ref raw_data) = v {
+                        return Some(format!("{{ \"{}\" : [{}] }}", k, raw_data.clone()));
+                    }
+                }
+                return None;
+            }
+            _=>{None}
+        }
+    }
+
     /// Create a response from some errors.
     #[must_use]
     pub fn from_errors(errors: Vec<ServerError>) -> Self {
@@ -154,6 +184,36 @@ impl BatchResponse {
                 .clone()
                 .map(|current_name| (current_name, value))
         })
+    }
+
+    pub fn has_raw_data(&self) -> bool {
+        match self {
+            BatchResponse::Single(resp) => resp.has_raw_data(),
+            BatchResponse::Batch(resp) => {
+                !resp.iter().find(|resp_i| !resp_i.has_raw_data()).is_some()
+            }
+        }
+    }
+
+    pub fn get_raw_data(&self) -> Option<String> {
+        match self {
+            BatchResponse::Single(resp) => resp.get_raw_data(),
+            BatchResponse::Batch(resp) => {
+                let mut ret_value = "[".to_string();
+                for r in resp {
+                    if let Some(inner_r) = r.get_raw_data() {
+                        ret_value.push_str(&inner_r);
+                        ret_value.push_str(",");
+                    }
+                }
+                if resp.len() > 1 {
+                    ret_value.pop();
+                }
+                ret_value.push_str("]");
+
+                return Some(ret_value);
+            }
+        }
     }
 }
 
